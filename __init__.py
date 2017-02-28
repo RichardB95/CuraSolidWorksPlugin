@@ -2,6 +2,13 @@
 
 # TODO: Adding support for basic CATIA support
 
+import os
+import sys
+
+external_modules = os.path.join(os.path.split(__file__)[0], "3rd_party")
+if os.path.isdir(external_modules):
+    sys.path.append(external_modules)
+
 from UM.Platform import Platform
 
 from UM.i18n import i18nCatalog
