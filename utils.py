@@ -5,53 +5,36 @@ import subprocess
 
 ##  If successful returns a list of all currently running processes, including
 #   the following fields:
-#   - caption: Caption of the process, usually looks like this: "<something>.exe"
-#   - process_id: process ID
+#   - Caption: Caption of the process, usually looks like this: "<something>.exe"
+#   - ProcessId: process ID
 #   If unsuccessful, return None.
 def getAllRunningProcesses():
-    args = ["wmic", "/OUTPUT:STDOUT", "PROCESS", "get", "Caption,ProcessId"]
-    p = subprocess.Popen(args, stdout = subprocess.PIPE)
-
-    out, _ = p.communicate()
-    out = out.decode("utf-8")
-
-    # sanitize the newline characters
-    out = out.replace("\r\n", "\n")
-    out = out.replace("\r", "\n")
-    while out.find("\n\n") != -1:
-        out = out.replace("\n\n", "\n")
-
-    lines = out.split("\n")
-    if len(lines) < 2:
-        return
-
-    # the first line is header
-    result_list = []
-    for line in lines[1:]:
-        line = line.strip()
-        if not line:
-            continue
-
-        # get caption and process id
-        parts = line.rsplit(" ", 1)
-        if len(parts) != 2:
-            continue
-
-        caption, process_id = parts
-        caption = caption.strip()
-        process_id = int(process_id)
-
-        result_list.append({"caption": caption,
-                            "process_id": process_id})
-    return result_list
+    columns = ["Caption", "ProcessId"]
+    args = ["wmic", "/OUTPUT:STDOUT", "PROCESS", "get", ",".join(columns)]
+    return _runWmicSearch(args, columns)
 
 
+##  Searches for all Windows products using WMIC. The result is a list of
+#   products including the following fields:
+#   - InstallLocation
+#   - Name
+#   - Vendor
+#   - Version
+#
+#   A "product_name" string can be provided so it will only look for products
+#   whose name contains the <product_name> string.
+#
 def getWindowsProducts(product_name = None):
     columns = ["InstallLocation", "Name", "Vendor", "Version"]
     args = ["wmic", "/OUTPUT:STDOUT", "PRODUCT"]
     if product_name:
         args += ["where", "Name LIKE \'%%%s%%\'" % product_name]
     args += ["get", ",".join(columns)]
+
+    return _runWmicSearch(args, columns)
+
+
+def _runWmicSearch(args, columns):
     p = subprocess.Popen(args, stdout=subprocess.PIPE)
 
     out, _ = p.communicate()
