@@ -8,18 +8,11 @@ from UM.i18n import i18nCatalog
 i18n_catalog = i18nCatalog("CuraSolidWorksIntegrationPlugin")
 
 if Platform.isWindows():
-    # For installation check
-    import winreg
-    # The reader plugin itself
-    from . import SolidWorksReader
+    from . import SolidWorksUtils
 
     def is_SolidWorks_available():
-        try:
-            # Could find a better key to detect whether SolidWorks is installed..
-            winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, "SldWorks.Application")
-            return True
-        except:
-            return False
+        solidworks = SolidWorksUtils.getAvailableSolidWorksVersions()
+        return True if solidworks else False
 
 
 def getMetaData():
@@ -50,6 +43,7 @@ def register(app):
     # Solid works only runs on Windows.
     plugin_data = {}
     if Platform.isWindows():
+        from . import SolidWorksReader
         reader = SolidWorksReader.SolidWorksReader()
         # TODO: Feature: Add at this point an early check, whether readers are available. See: reader.areReadersAvailable()
         if is_SolidWorks_available():
